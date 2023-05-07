@@ -21,7 +21,7 @@ public enum Effect {
         return e.description();
     }
 
-    String description() {
+    public String description() {
         return description;
     }
 

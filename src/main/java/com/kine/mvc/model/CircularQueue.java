@@ -1,4 +1,4 @@
-package com.kine.mvc.controller;
+package com.kine.mvc.model;
 
 import java.util.*;
 
@@ -132,13 +132,11 @@ public class CircularQueue<T> implements Queue<T> {
 
     @Override
     public T element() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'element'");
     }
 
     @Override
     public T peek() {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'peek'");
     }
 

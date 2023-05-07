@@ -1,80 +1,87 @@
 package com.kine.mvc.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.kine.mvc.model.cards.*;
-import com.kine.mvc.model.effects.Effect;
+import com.kine.mvc.controller.rounds.BlockedRound;
+import com.kine.mvc.controller.rounds.PickupRound;
+import com.kine.mvc.controller.services.*;
+import com.kine.mvc.model.Deck;
+import com.kine.mvc.model.cards.Card;
 import com.kine.mvc.model.player.Player;
 
 public class Table {
 
-    private Deck deck;
+    private int handSize;
+    List<Player> players;
 
-    private List<Player> players;
-
-    private Turn lastTurn;
-
-    public Cards discardDeck() {
-        class DiscardDeck {
-
-            public static List<Card> count(Turn completeTurn) {
-                if (completeTurn.previous() == null || completeTurn.effect().equals(Effect.CLEAR)) {
-                    return new ArrayList<>();
-                }
-                var prev = count(completeTurn.previous());
-                prev.addAll(completeTurn.cards().list());
-                return prev;
-            }
-
-        }
-        return () -> DiscardDeck.count(lastTurn);
-    }
-
-    private Player nextPlayer(Player lastPlayer) {
-        var index = lastPlayer.index();
-        var pNext = players.get(index + 1 % players.size());
-        return pNext;
-    }
-
-    Table(Deck cards, int playerCount, int handSize) {
-        this.deck = cards;
-        this.players = Stream.iterate(0, (i) -> i + 1)
-                .map((i) -> new Player(deck, handSize, i))
-                .limit(playerCount)
-                .collect(Collectors.toList());
-        this.lastTurn = new Setup(players, handSize);
-        
-    }
-
-    Turn next() {
-        System.out.println(Turn.show(lastTurn));
-        var lastPlayer = lastTurn.player();
-        var player = nextPlayer(lastPlayer);
-
-        Turn turn = Turn.forPlayer(player, this);
-        this.lastTurn = turn;
-        return turn;
-    }
-
-    public boolean beats(Card c) {
-        var last = lastTurn.topCard();
-        var beats = last.map(c::beats);
-        return beats.orElse(true);
-    }
-
-    public Deck getDeck() {
-        return deck;
-    }
-
-    public List<Player> getPlayers() {
+    public List<Player> players() {
         return players;
     }
 
-    public Turn getLastTurn() {
-        return lastTurn;
+    private Deck deck;
+    private PlayerService playerService;
+    private CardService cardService;
+
+    public Table(int playerCount, int handSize, Deck deck) {
+        this.deck = deck;
+        this.handSize = handSize;
+        this.players = Stream.iterate(0, i -> i + 1)
+                .limit(playerCount)
+                .map(i -> new Player(i, new PlayerHand(deck, handSize)))
+                .collect(Collectors.toList());
+        this.playerService = () -> players;
+        this.cardService = new CardServiceImpl(handSize);
+        this.lastRound = new Setup(playerService, cardService);
+    }
+
+    public Deck getRemainingDeck() {
+        return deck;
+    }
+
+    private Round lastRound;
+
+    public Round playRound() {
+        Player player;
+        if (lastRound instanceof PickupRound || lastRound instanceof Setup) {
+            player = lastRound.player();
+        } else {
+            player = playerService.nextPlayer(this, lastRound.player());
+        }
+        if (lastRound instanceof BlockedRound br) {
+            var ret = Play.skip(player, lastRound);
+            lastRound = ret;
+            return ret;
+        }
+        var play = playerService.createPlay(player);
+        var hand = player.getHand();
+        if (play.isEmpty()) {
+            List<Card> discardPile = cardService.discardPile(lastRound);
+            var ret = play.pickup(player, discardPile, lastRound);
+            lastRound = ret;
+            return playRound();
+        }
+        if (playerService.isPlayerMissingCards(hand, handSize)) {
+            var missing = playerService.missing(hand, handSize);
+            var topUp = playerService.createPickup(deck.isEmpty(), hand, deck, missing);
+            hand.pickup(topUp);
+        }
+
+        Round ret;
+        switch (play.effect()) {
+            case BLOCK:
+                ret = play.block(player, lastRound);
+                break;
+            case CLEAR:
+                ret = play.clear(player, lastRound);
+                break;
+            default:
+                ret = play.round(player, lastRound);
+                break;
+        }
+        lastRound = ret;
+        return ret;
     }
 
 }

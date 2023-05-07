@@ -6,16 +6,14 @@ public class Player {
 
     private final int playerIndex;
     private final Hand hand;
-    private final Strategy strategy;
 
     public static String show(Player p) {
-        return String.format("Player #%d", p.playerIndex);
+        return p.name();
     }
 
-    public Player(int playerIndex, Strategy strategy, Hand hand) {
-        this.hand = hand;
-        this.playerIndex = playerIndex;
-        this.strategy = strategy;
+    public Player(int index, Hand playerHand) {
+        this.hand = playerHand;
+        this.playerIndex = index;
     }
 
     public int index() {
@@ -23,7 +21,7 @@ public class Player {
     }
 
     public String name() {
-        return show(this);
+        return String.format("Player #%d", playerIndex+1);
     }
 
     public boolean won() {
@@ -32,10 +30,6 @@ public class Player {
 
     public Hand getHand() {
         return hand;
-    }
-
-    public Strategy getStrategy() {
-        return strategy;
     }
 
 }

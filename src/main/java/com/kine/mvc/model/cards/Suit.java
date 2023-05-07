@@ -1,7 +1,7 @@
 package com.kine.mvc.model.cards;
 
 public enum Suit {
-    A("Heart"), B("Club"), C("Spade"), D("Diamond");
+    Heart("Heart"), Club("Club"), Spade("Spade"), Diamond("Diamond");
 
     Suit(String name) {
         this.name = name;

@@ -1,8 +1,10 @@
 package com.kine.mvc.model.hand;
 
 import java.util.List;
+import java.util.Set;
 
-import com.kine.mvc.model.cards.*;
+import com.kine.mvc.model.cards.Card;
+import com.kine.mvc.model.cards.Cards;
 
 public interface Hand {
 
@@ -30,23 +32,37 @@ public interface Hand {
     /**
      * Take cards
      * 
-     * @param cards to pick up
+     * @param pile to pick up
      * @return number of cards taken
      */
-    int pickup(Decklike cards);
+    int pickup(List<Card> pile);
 
     /**
      * Indexes of the cards if they're present in the hand
+     * 
      * @param cards collection to index
      * @return integers representing the position of the cards in the hand
      */
-    CardIndexes inHand(Cards cards);
+    CardIndexes inHand(Set<Card> cards);
 
     /**
+     * Play a collection of cards at once
      * 
-     * @return
+     * @return a list of cards removed from the hand
      */
-    List<Card> play(CardIndexes indexes);
+    default List<Card> play(CardIndexes indexes) {
+        return indexes.indexes().stream().map(inHand()::play).toList();
+    }
+
+    /**
+     * Play a single card
+     * 
+     * @param index of the card
+     * @return card that was removed
+     */
+    default Card play(int index) {
+        return inHand().play(index);
+    }
 
     /**
      * Whether the player has played all available cards

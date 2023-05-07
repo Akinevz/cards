@@ -1,4 +1,4 @@
-package com.kine.mvc.controller;
+package com.kine.mvc.view;
 
 public class I11n {
     public static String pluralise(String single) {

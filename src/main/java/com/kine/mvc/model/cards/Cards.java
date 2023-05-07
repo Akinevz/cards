@@ -13,26 +13,26 @@ import com.kine.mvc.model.effects.Effect;
 
 public interface Cards {
 
-    List<Card> list();
+    List<Card> cards();
+
+    default Card play(int index){
+        return cards().remove(index);
+    }
 
     default Optional<Card> topCard() {
-        if (list() == null)
+        if (cards() == null)
             return Optional.empty();
-        if (list().size() == 0)
+        if (cards().size() == 0)
             return Optional.empty();
-        return Optional.of(list()).map(s -> s.get(s.size() - 1));
+        return Optional.of(cards()).map(s -> s.get(s.size() - 1));
     }
 
     default Effect getEffect() {
         return topCard().map(Card::getEffect).orElse(Effect.NONE);
     }
 
-    public static String show(Optional<Cards> cards) {
-        return cards.map(Cards::list).map(Cards::show).orElse("No cards");
-    }
-
     public static String show(Cards cards){
-        return show(cards.list());
+        return show(cards.cards());
     }
 
     public static String show(List<Card> hand) {
@@ -41,5 +41,11 @@ public interface Cards {
                 .limit(hand.size())
                 .map(indexed)
                 .collect(Collectors.joining("\n"));
+    }
+
+    default int size() {return cards().size();}
+
+    default Stream<Card> stream(){
+        return cards().stream();
     }
 }

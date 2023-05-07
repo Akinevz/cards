@@ -52,13 +52,13 @@ public enum Rank {
                 // if same
                 if (r1.equals(r2))
                     return 0;
-                // if seven, must compare less than
-                if (r1.effect.equals(Effect.LOWER)) {
-                    return r1.compareTo(r2) < 0 ? +1 : -1;
-                }
                 // if trump can lay
                 if (t1)
                     return +1;
+                // if seven, must compare less than
+                if (r2.effect.equals(Effect.LOWER)) {
+                    return r1.compareTo(r2) < 0 ? +1 : -1;
+                }
                 // else compare by rank
                 return r1.compareTo(r2);
             }
@@ -67,7 +67,7 @@ public enum Rank {
     }
 
     public boolean beats(Rank rank) {
-        return this.compareTo(rank) != -1;
+        return beatsComparator().compare(this, rank) >= 0 ;
     }
 
 }
